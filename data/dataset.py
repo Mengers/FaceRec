@@ -17,7 +17,7 @@ import xml.etree.ElementTree as ET
 import numpy as np
 from lib.priors import Priors
 from lib.utils import *
-
+from torchvision.transforms import ToTensor
 
 np.set_printoptions(threshold=np.inf)
 
@@ -39,6 +39,8 @@ class LFFDDataset(Dataset):
 
         if self.transform:
             img, gt_bboxes, gt_classes = self.transform(np.array(img), gt_bboxes, gt_classes)
+            # img = self.transform(img)
+        # img = ToTensor()(img)
         gt_bboxes = torch.tensor(gt_bboxes)
         gt_classes = torch.LongTensor(gt_classes)
 
@@ -61,6 +63,11 @@ class LFFDDataset(Dataset):
             y1 = float(bbox.find('ymin').text) - 1
             x2 = float(bbox.find('xmax').text) - 1
             y2 = float(bbox.find('ymax').text) - 1
+            if x1 < 0:
+                x1 = 0.0
+            if y1 < 0:
+                y1 = 0.0
+
             imgW = float(size.find('width').text)
             imgH = float(size.find('height').text)
             boxes.append([x1 / imgW, y1 / imgH, x2 / imgW, y2 / imgH])
@@ -78,43 +85,51 @@ if __name__ == '__main__':
     transform = LFFDAug(to_tensor=False)
     import cv2 as cv
 
-    datset = LFFDDataset("/home/hp/Data/FaceData/FaceDex")
+    datset = LFFDDataset("/home/hp/Data/FaceData/FaceDex", transform=transform)
     # print(datset.labels)
+    # #
+    # for img, gt_pos, gt_labels, not_ignored, img_name in datset:
     #
-    img, gt_loc, gt_labels, ignored, name= datset[random.choice(range(len(datset)))]
-    print(name)
-    # image = cv.imread(name)
-    # cv.imshow("1", image)
-    # cv.waitKey(100)
-    # img.show()
-    print(ignored.size())
-    print(ignored)
-    cv_img = np.array(img)
-    h,w,_ = cv_img.shape
-    cv_img = cv.cvtColor(cv_img, cv.COLOR_RGB2BGR)
-    priors = datset.priors
-    idx = (gt_labels > 0) & ignored
-    loc = convert_locations_to_boxes(gt_loc, datset.priors, 2)
-    loc = loc[idx]
-    priors = priors[idx]
-    label = gt_labels[idx]
-    print(loc.size())
-    for i in range(priors.size(0)):
-        x, y, r = priors[i, :]
-        xt, yt, xtl, ytl = loc[i, :]
-        # print(x,y,r)
-        x = x.item() * w
-        y = y.item() * h
-        r = r.item() * 640
+    #     print(str(1))
 
-        xt = xt.item() * w
-        yt = yt.item() *h
-        xtl = xtl.item() * w
-        ytl = ytl.item() * h
 
-        print(x, y, r)
-        cv.circle(cv_img, (int(x), int(y)), int(r), (255, 0, 0), 2)
 
-        cv.rectangle(cv_img, (int(xt), int(yt)), (int(xtl), int(ytl)), (0, 255, 0), 2)
-    cv.imshow("cv", cv_img)
-    cv.waitKey(5000)
+
+
+    # img, gt_loc, gt_labels, ignored, name= datset[random.choice(range(len(datset)))]
+    # print(name)
+    # # image = cv.imread(name)
+    # # cv.imshow("1", image)
+    # # cv.waitKey(100)
+    # # img.show()
+    # print(ignored.size())
+    # print(ignored)
+    # cv_img = np.array(img)
+    # h,w,_ = cv_img.shape
+    # cv_img = cv.cvtColor(cv_img, cv.COLOR_RGB2BGR)
+    # priors = datset.priors
+    # idx = (gt_labels > 0) & ignored
+    # loc = convert_locations_to_boxes(gt_loc, datset.priors, 2)
+    # loc = loc[idx]
+    # priors = priors[idx]
+    # label = gt_labels[idx]
+    # print(loc.size())
+    # for i in range(priors.size(0)):
+    #     x, y, r = priors[i, :]
+    #     xt, yt, xtl, ytl = loc[i, :]
+    #     # print(x,y,r)
+    #     x = x.item() * w
+    #     y = y.item() * h
+    #     r = r.item() * 640
+    #
+    #     xt = xt.item() * w
+    #     yt = yt.item() *h
+    #     xtl = xtl.item() * w
+    #     ytl = ytl.item() * h
+    #
+    #     print(x, y, r)
+    #     cv.circle(cv_img, (int(x), int(y)), int(r), (255, 0, 0), 2)
+    #
+    #     cv.rectangle(cv_img, (int(xt), int(yt)), (int(xtl), int(ytl)), (0, 255, 0), 2)
+    # cv.imshow("cv", cv_img)
+    # cv.waitKey(5000)

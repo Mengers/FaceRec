@@ -9,6 +9,8 @@
 import cv2 as cv
 import numpy as np
 from PIL import Image
+from torchvision import transforms
+
 from albumentations import (
 
     HorizontalFlip,
@@ -34,9 +36,9 @@ class LFFDAug(object):
         augs = [
             LongestMaxSize(640),
             PadIfNeeded(640, 640, cv.BORDER_CONSTANT, value=0),
-            # RandomSizedBBoxSafeCrop(height = 300,width = 300),
-            RandomBrightness(p=0.5),
-            RandomContrast(p=0.5),
+            # # RandomSizedBBoxSafeCrop(height = 300,width = 300),
+            # RandomBrightness(p=0.5),
+            # RandomContrast(p=0.5),
 
             # RandomSunFlare(p=0.5, flare_roi=(0, 0, 1, 0.5), angle_lower=0.5,src_radius= 150),
             RandomShadow(p=0.5, num_shadows_lower=1, num_shadows_upper=1,
@@ -55,11 +57,17 @@ class LFFDAug(object):
 
 
 if __name__ == "__main__":
-    basket_aug = LFFDAug()
-    img = cv.imread("./a.jpg")
+    aug = LFFDAug()
+    img = cv.imread("/home/hp/Data/FaceData/FaceDex/images/0--Parade_0_Parade_marchingband_1_5.jpg")
+    cv.imshow("img", img)
+    cv.waitKey(1000)
     boxes = [[0.2, 0.2, 0.5, 0.5], [0, 0, 0.1, 0.1]]
     labels = [0, 1]
-    img, boxes, labels = basket_aug(img, boxes, labels)
+    img, boxes, labels = aug(img, boxes, labels)
+    # img = transforms.ToPILImage()(img)
+    # img.show()
+    img = cv.cvtColor(np.asarray(img), cv.COLOR_RGB2BGR)
+    # print(img.shape)
 
     for box in boxes:
         xmin, ymin, xmax, ymax = box

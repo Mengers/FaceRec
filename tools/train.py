@@ -14,6 +14,7 @@ from HicFaceDec.data.dataset import LFFDDataset
 from lib.lossfun import LFFDLoss
 from tqdm import tqdm
 from HicFaceDec.data.augmentor import LFFDAug
+from torchvision import transforms
 
 num_classes = 2
 num_epochs = 500
@@ -26,12 +27,12 @@ scales = [(10,15),(15,20),(20,40),(40,70),(70,110),(110,250),(250,400),(400,560)
 if __name__ == '__main__':
     transform = LFFDAug()
     # transform = transforms.Compose([
-    #    transforms.Resize(512),
+    #    transforms.Resize(640),
     #    transforms.ToTensor(),
     #    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     # ])
     dataset = LFFDDataset("/home/hp/Data/FaceData/FaceDex", transform=transform)
-    dataloader = DataLoader(dataset, batch_size=16, shuffle=True, num_workers=6, pin_memory=True)
+    dataloader = DataLoader(dataset, batch_size=4, shuffle=True, num_workers=6, pin_memory=True)
 
     net = LFFDNet()
     net.cuda()
