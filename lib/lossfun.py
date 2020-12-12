@@ -6,21 +6,22 @@
 @LastEditors:
 @LastEditTime:
 '''
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
-import utils
+from lib.utils import *
 
 class LFFDLoss(nn.Module):
     def __init__(self):
-        super(BasketLoss, self).__init__()
+        super(LFFDLoss, self).__init__()
         self.neg_pos_ratio = 10
-    def forward(self,scores, predicted_locations, labels, gt_locations,not_ignored):
+    def forward(self, scores, predicted_locations, labels, gt_locations, not_ignored):
         num_classes = scores.size(2)
         with torch.no_grad():
             loss = -F.log_softmax(scores, dim=2)[:, :, 0]
-            mask = utils.hard_negative_mining(loss, labels, self.neg_pos_ratio) & not_ignored
+            mask = hard_negative_mining(loss, labels, self.neg_pos_ratio) & not_ignored
 
         confidence = scores[mask, :]
         classification_loss = F.cross_entropy(confidence.view(-1, num_classes), labels[mask], reduction='sum')

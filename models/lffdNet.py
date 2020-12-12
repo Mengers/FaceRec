@@ -9,6 +9,10 @@
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+
+from lib.priors import Priors
+from lib.utils import *
 
 # 3x3 convolution with padding
 def conv3x3(in_channels, out_channels, stride=1, padding=1):
@@ -71,6 +75,7 @@ class LFFDNet(nn.Module):
     def __init__(self):
         super(LFFDNet, self).__init__()
 
+        self.num_classes = 2
         # tiny part
         self.tiny_part1 = nn.Sequential(
             conv3x3(3, 64, stride=2, padding=0),
@@ -136,10 +141,36 @@ class LFFDNet(nn.Module):
         x, b8 = self.large_part3(x)
         score8, bbox8 = self.loss_branch8(b8)
 
-        outs = [score1, bbox1, score2, bbox2, score3, bbox3, score4, bbox4, score5, bbox5, score6, bbox6, score7, bbox7,
-                score8, bbox8]
+        cls = torch.cat([score1.permute(0, 2, 3, 1).contiguous().view(score1.size(0), -1, self.num_classes),
+                         score2.permute(0, 2, 3, 1).contiguous().view(score2.size(0), -1, self.num_classes),
+                         score3.permute(0, 2, 3, 1).contiguous().view(score3.size(0), -1, self.num_classes),
+                         score4.permute(0, 2, 3, 1).contiguous().view(score4.size(0), -1, self.num_classes),
+                         score5.permute(0, 2, 3, 1).contiguous().view(score5.size(0), -1, self.num_classes),
+                         score6.permute(0, 2, 3, 1).contiguous().view(score6.size(0), -1, self.num_classes),
+                         score7.permute(0, 2, 3, 1).contiguous().view(score7.size(0), -1, self.num_classes),
+                         score8.permute(0, 2, 3, 1).contiguous().view(score8.size(0), -1, self.num_classes)], dim=1)
+        loc = torch.cat([bbox1.permute(0, 2, 3, 1).contiguous().view(bbox1.size(0), -1, 4),
+                         bbox2.permute(0, 2, 3, 1).contiguous().view(bbox2.size(0), -1, 4),
+                         bbox3.permute(0, 2, 3, 1).contiguous().view(bbox3.size(0), -1, 4),
+                         bbox4.permute(0, 2, 3, 1).contiguous().view(bbox4.size(0), -1, 4),
+                         bbox5.permute(0, 2, 3, 1).contiguous().view(bbox5.size(0), -1, 4),
+                         bbox6.permute(0, 2, 3, 1).contiguous().view(bbox6.size(0), -1, 4),
+                         bbox7.permute(0, 2, 3, 1).contiguous().view(bbox7.size(0), -1, 4),
+                         bbox8.permute(0, 2, 3, 1).contiguous().view(bbox8.size(0), -1, 4)], dim=1)
 
-        return outs
+        if not self.training:
+            if self.priors is None:
+                self.priors = Priors()() # center form
+                #self.priors = self.priors.cuda()
+            boxes = convert_locations_to_boxes(
+                loc, self.priors, 2
+            )# corner_form
+            cls = F.softmax(cls, dim=2)
+            return cls, boxes
+        else:
+            #print(confidences.size(),locations.size())
+            return (cls,loc) #  (2,1111,3) (2,1111,4)
+
 
 
 def get_lffdnet():
@@ -160,7 +191,7 @@ if __name__ == '__main__':
 
     net = get_lffdnet()
     print(net)
-    y = net(x_image)
+    y,l = net(x_image)
     print(y)
 
     #summary(net.to('cuda'), (3, 640, 640))

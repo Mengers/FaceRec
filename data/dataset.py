@@ -6,6 +6,10 @@
 @LastEditors:
 @LastEditTime:
 '''
+
+import sys
+sys.path.append("..")
+
 from torch.utils.data import Dataset
 import glob
 from PIL import Image
@@ -41,7 +45,7 @@ class LFFDDataset(Dataset):
         gt_bboxes, gt_classes, ignored = assign_priors(gt_bboxes, gt_classes, self.priors, 0.5)
         locations = convert_boxes_to_locations(gt_bboxes, self.priors, 2)
 
-        return [img, locations, gt_classes, ignored]
+        return [img, locations, gt_classes, ignored, self.img_paths[idx]]
 
     def _get_annotation(self, idx):
         annotation_file = self.labels[idx]
@@ -74,14 +78,22 @@ if __name__ == '__main__':
     transform = LFFDAug(to_tensor=False)
     import cv2 as cv
 
-    datset = LFFDDataset("", transform=transform)
-    img, gt_loc, gt_labels, ignored = datset[random.choice(range(len(datset)))]
-    # print(ignored.size())
+    datset = LFFDDataset("/home/hp/Data/FaceData/FaceDex")
+    # print(datset.labels)
+    #
+    img, gt_loc, gt_labels, ignored, name= datset[random.choice(range(len(datset)))]
+    print(name)
+    # image = cv.imread(name)
+    # cv.imshow("1", image)
+    # cv.waitKey(100)
+    # img.show()
+    print(ignored.size())
+    print(ignored)
     cv_img = np.array(img)
-    # h,w,_ = cv_img.shape
+    h,w,_ = cv_img.shape
     cv_img = cv.cvtColor(cv_img, cv.COLOR_RGB2BGR)
     priors = datset.priors
-    idx = (gt_labels > 0) & ignored.bool()
+    idx = (gt_labels > 0) & ignored
     loc = convert_locations_to_boxes(gt_loc, datset.priors, 2)
     loc = loc[idx]
     priors = priors[idx]
@@ -89,11 +101,20 @@ if __name__ == '__main__':
     print(loc.size())
     for i in range(priors.size(0)):
         x, y, r = priors[i, :]
+        xt, yt, xtl, ytl = loc[i, :]
         # print(x,y,r)
-        x = x.item() * 640
-        y = y.item() * 640
+        x = x.item() * w
+        y = y.item() * h
         r = r.item() * 640
+
+        xt = xt.item() * w
+        yt = yt.item() *h
+        xtl = xtl.item() * w
+        ytl = ytl.item() * h
+
         print(x, y, r)
         cv.circle(cv_img, (int(x), int(y)), int(r), (255, 0, 0), 2)
-        cv.imshow("cv", cv_img)
-        cv.waitKey(0)
+
+        cv.rectangle(cv_img, (int(xt), int(yt)), (int(xtl), int(ytl)), (0, 255, 0), 2)
+    cv.imshow("cv", cv_img)
+    cv.waitKey(5000)

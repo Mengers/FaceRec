@@ -30,10 +30,10 @@ if __name__ == '__main__':
     #    transforms.ToTensor(),
     #    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     # ])
-    dataset = LFFDDataset("", transform=transform)
+    dataset = LFFDDataset("/home/hp/Data/FaceData/FaceDex", transform=transform)
     dataloader = DataLoader(dataset, batch_size=16, shuffle=True, num_workers=6, pin_memory=True)
 
-    net = LFFDNet(num_classes=num_classes)
+    net = LFFDNet()
     net.cuda()
     # net.load_state_dict(torch.load("./ckpt/3090.pth"))
     optimizer = optim.Adam(net.parameters(), lr=1e-3)
@@ -46,7 +46,8 @@ if __name__ == '__main__':
         epoch_loss_cls = 0.
         epoch_loss_reg = 0.
 
-        for img, gt_pos, gt_labels, not_ignored in tqdm(dataloader):
+        for img, gt_pos, gt_labels, not_ignored, img_name in tqdm(dataloader):
+            print(img_name)
             img = img.cuda()
             gt_pos = gt_pos.cuda()
             not_ignored = not_ignored.cuda()
