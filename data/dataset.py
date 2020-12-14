@@ -93,9 +93,6 @@ if __name__ == '__main__':
     #     print(str(1))
 
 
-
-
-
     # img, gt_loc, gt_labels, ignored, name= datset[random.choice(range(len(datset)))]
     # print(name)
     # # image = cv.imread(name)
