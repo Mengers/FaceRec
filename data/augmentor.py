@@ -37,8 +37,8 @@ class LFFDAug(object):
             LongestMaxSize(640),
             PadIfNeeded(640, 640, cv.BORDER_CONSTANT, value=0),
             # # RandomSizedBBoxSafeCrop(height = 300,width = 300),
-            # RandomBrightness(p=0.5),
-            # RandomContrast(p=0.5),
+            RandomBrightness(p=0.5),
+            RandomContrast(p=0.5),
 
             # RandomSunFlare(p=0.5, flare_roi=(0, 0, 1, 0.5), angle_lower=0.5,src_radius= 150),
             RandomShadow(p=0.5, num_shadows_lower=1, num_shadows_upper=1,
@@ -50,10 +50,14 @@ class LFFDAug(object):
                                  bbox_params={"format": "albumentations", "min_area": 0, "min_visibility": 0.2,
                                               'label_fields': ['category_id']}
                                  )
+        self.to_Tensor = to_tensor
 
     def __call__(self, cv_img, boxes=None, labels=None):
         auged = self.transform(image=cv_img, bboxes=boxes, category_id=labels)
-        return ToTensor()(auged["image"]), auged["bboxes"], auged["category_id"]
+        if self.to_Tensor:
+            return ToTensor()(auged["image"]), auged["bboxes"], auged["category_id"]
+        else:
+            return (auged["image"]), auged["bboxes"], auged["category_id"]
 
 
 if __name__ == "__main__":
@@ -64,10 +68,12 @@ if __name__ == "__main__":
     boxes = [[0.2, 0.2, 0.5, 0.5], [0, 0, 0.1, 0.1]]
     labels = [0, 1]
     img, boxes, labels = aug(img, boxes, labels)
-    # img = transforms.ToPILImage()(img)
-    # img.show()
+    img = transforms.ToPILImage()(img.float())
+    print(img)
+    img.show()
     img = cv.cvtColor(np.asarray(img), cv.COLOR_RGB2BGR)
-    # print(img.shape)
+    print(img.shape)
+
 
     for box in boxes:
         xmin, ymin, xmax, ymax = box

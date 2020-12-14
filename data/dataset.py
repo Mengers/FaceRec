@@ -86,47 +86,51 @@ if __name__ == '__main__':
     import cv2 as cv
 
     datset = LFFDDataset("/home/hp/Data/FaceData/FaceDex", transform=transform)
-    # print(datset.labels)
-    # #
+    print(datset.labels)
+    #
     # for img, gt_pos, gt_labels, not_ignored, img_name in datset:
     #
     #     print(str(1))
 
 
-    # img, gt_loc, gt_labels, ignored, name= datset[random.choice(range(len(datset)))]
-    # print(name)
-    # # image = cv.imread(name)
-    # # cv.imshow("1", image)
-    # # cv.waitKey(100)
-    # # img.show()
-    # print(ignored.size())
-    # print(ignored)
-    # cv_img = np.array(img)
-    # h,w,_ = cv_img.shape
-    # cv_img = cv.cvtColor(cv_img, cv.COLOR_RGB2BGR)
-    # priors = datset.priors
-    # idx = (gt_labels > 0) & ignored
-    # loc = convert_locations_to_boxes(gt_loc, datset.priors, 2)
-    # loc = loc[idx]
-    # priors = priors[idx]
-    # label = gt_labels[idx]
-    # print(loc.size())
-    # for i in range(priors.size(0)):
-    #     x, y, r = priors[i, :]
-    #     xt, yt, xtl, ytl = loc[i, :]
-    #     # print(x,y,r)
-    #     x = x.item() * w
-    #     y = y.item() * h
-    #     r = r.item() * 640
-    #
-    #     xt = xt.item() * w
-    #     yt = yt.item() *h
-    #     xtl = xtl.item() * w
-    #     ytl = ytl.item() * h
-    #
-    #     print(x, y, r)
-    #     cv.circle(cv_img, (int(x), int(y)), int(r), (255, 0, 0), 2)
-    #
-    #     cv.rectangle(cv_img, (int(xt), int(yt)), (int(xtl), int(ytl)), (0, 255, 0), 2)
+    img, gt_loc, gt_labels, ignored, name= datset[random.choice(range(len(datset)))]
+    print(name)
+    image = cv.imread(name)
+    cv.imshow("1", image)
+    cv.waitKey(100)
+    # img.show()
+    print(ignored.size())
+    print(ignored)
+    cv_img = np.array(img)
+
+    # print(cv_img)
+    cv_img = cv.cvtColor(cv_img, cv.COLOR_RGB2BGR)
     # cv.imshow("cv", cv_img)
     # cv.waitKey(5000)
+
+    priors = datset.priors
+    idx = (gt_labels > 0) & ignored
+    loc = convert_locations_to_boxes(gt_loc, datset.priors, 2)
+    loc = loc[idx]
+    priors = priors[idx]
+    label = gt_labels[idx]
+    print(loc.size())
+    for i in range(priors.size(0)):
+        x, y, r = priors[i, :]
+        xt, yt, xtl, ytl = loc[i, :]
+        # print(x,y,r)
+        x = x.item() * 640
+        y = y.item() * 640
+        r = r.item() * 640
+
+        xt = xt.item() * 640
+        yt = yt.item() *640
+        xtl = xtl.item() * 640
+        ytl = ytl.item() * 640
+
+        print(x, y, r)
+        cv.circle(cv_img, (int(x), int(y)), int(r), (255, 0, 0), 2)
+
+        cv.rectangle(cv_img, (int(xt), int(yt)), (int(xtl), int(ytl)), (0, 255, 0), 2)
+    cv.imshow("cv", cv_img)
+    cv.waitKey(5000)
